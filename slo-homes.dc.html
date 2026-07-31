@@ -24,7 +24,7 @@
 
 <div style="font-family:var(--font-jp);background:var(--slo-paper);color:var(--slo-ink);min-height:100vh" data-lang="{{ langAttr }}">
 
-  <div style="position:fixed;top:0;left:0;right:0;z-index:60;display:flex;justify-content:space-between;align-items:center;padding:10px clamp(16px,4vw,64px);font-family:var(--font-sans);font-size:11px;letter-spacing:.06em;color:var(--slo-ink-60);background:rgba(244,242,236,.9);border-bottom:1px solid var(--slo-rule)">
+  <div style="position:fixed;top:0;left:0;right:0;z-index:60;display:flex;justify-content:space-between;align-items:center;padding:10px clamp(16px,4vw,64px);font-family:var(--font-sans);font-size:11px;letter-spacing:.06em;color:var(--slo-ink-60);background:var(--slo-paper);border-bottom:1px solid var(--slo-rule)">
     <span>staple studio<span style="color:var(--slo-ink-20);margin:0 .5em">/</span>slo homes</span>
   </div>
 
@@ -41,14 +41,14 @@
     </div>
   </nav>
 
-  <header id="top" style="position:relative;height:260vh;color:var(--slo-paper)">
-    <div style="position:sticky;top:0;height:100dvh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding-top:clamp(88px,13vh,150px);padding-bottom:clamp(64px,9vh,110px)">
+  <header id="top" style="{{ heroOuterStyle }}">
+    <div style="{{ heroInnerStyle }}">
       <div style="{{ heroWrap0 }}"><img src="assets/hero-1.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>
       <div style="{{ heroWrap1 }}"><img src="assets/hero-2.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>
       <div style="{{ heroWrap2 }}"><img src="assets/hero-3.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>
       <div style="{{ heroWrap3 }}"><img src="assets/hero-4.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>
       <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(17,17,17,.38) 0%,rgba(17,17,17,.16) 30%,rgba(17,17,17,.42) 72%,rgba(17,17,17,.66) 100%);z-index:1"></div>
-      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,64px);width:100%;position:relative;z-index:2;display:grid;align-items:center;justify-items:start">
+      <div style="{{ heroTextWrapStyle }}">
         <h1 style="{{ heroTitleStyle }}"><span style="{{ ja }}">あなたには<br>故郷と呼べる場所が<br>ありますか？</span></h1>
         <div style="{{ heroCopyStyle }}">
           <div style="{{ ja }}">
@@ -59,7 +59,7 @@
           </div>
         </div>
       </div>
-      <div id="hero-scroll" style="position:absolute;left:clamp(16px,4vw,64px);bottom:22px;z-index:2;font-family:var(--font-sans);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,242,236,.7);display:flex;align-items:center;gap:10px">
+      <div id="hero-scroll" style="{{ heroScrollStyle }}">
         <span style="width:40px;height:1px;background:var(--slo-yellow)"></span>Scroll
       </div>
     </div>
@@ -175,7 +175,7 @@
         <p style="font-size:14px;line-height:1.75;color:var(--slo-ink-60);margin-top:8px">SOIL Setoda&nbsp;/&nbsp;<span style="{{ ja }}">生口島・瀬戸田</span><span style="{{ en }}">Ikuchijima, Setoda</span></p>
         <div style="display:flex;gap:16px;align-items:flex-start;margin-top:20px">
           <span style="flex:0 0 auto;width:10px;height:10px;background:var(--slo-yellow);margin-top:7px"></span>
-          <p style="font-size:15px;line-height:1.85;color:var(--slo-ink);margin:0;word-break:keep-all;overflow-wrap:break-word"><span style="{{ ja }}">基本計画もこれからのため、<wbr>掲載しているものはあくまでもイメージです。</span><span style="{{ en }}">The plans are still taking shape; what you see here is a sketch of intent, not a promise.</span></p>
+          <p style="{{ noteStyle }}"><span style="{{ ja }}">基本計画もこれからのため、<wbr>掲載しているものはあくまでもイメージです。</span><span style="{{ en }}">The plans are still taking shape; what you see here is a sketch of intent, not a promise.</span></p>
         </div>
       </div>
 
@@ -294,7 +294,7 @@
       </div>
       <div style="display:flex;gap:16px;align-items:flex-start;margin-top:32px;border-top:1px solid var(--slo-ink);padding-top:16px">
         <span style="flex:0 0 auto;width:10px;height:10px;background:var(--slo-yellow);margin-top:7px"></span>
-        <p style="font-size:15px;line-height:1.85;color:var(--slo-ink);margin:0;word-break:keep-all;overflow-wrap:break-word"><span style="{{ ja }}">着工まで、建築プランが変化する可能性があることをあらかじめご了承ください。</span><span style="{{ en }}">Please note that the design may still change before construction begins.</span></p>
+        <p style="{{ noteStyle }}"><span style="{{ ja }}">着工まで、建築プランが変化する可能性があることをあらかじめご了承ください。</span><span style="{{ en }}">Please note that the design may still change before construction begins.</span></p>
       </div>
     </div>
   </section>
@@ -349,20 +349,33 @@ class Component extends DCLogic {
   componentDidMount() {
 
 
-    this.onScroll = () => {
+    const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+    this.measure = () => {
       const hero = document.getElementById('top');
       const heroH = hero ? hero.offsetHeight : 800;
-      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-      const travel = hero ? Math.max(1, hero.offsetHeight - window.innerHeight) : 1;
-      const p = hero ? clamp(-hero.getBoundingClientRect().top / travel, 0, 1) : 0;
-
-      this.setState({
+      const narrow = window.innerWidth < 760;
+      const next = {
         scrolled: window.scrollY > 20,
-        overHero: window.scrollY <= heroH - 90,
-        titleT: 1 - clamp((p - 0.10) / 0.20, 0, 1),
-        copyT: clamp((p - 0.26) / 0.22, 0, 1)
-      });
+        overHero: window.scrollY <= heroH - 90
+      };
+      if (!narrow) {
+        const travel = hero ? Math.max(1, hero.offsetHeight - window.innerHeight) : 1;
+        const p = hero ? clamp(-hero.getBoundingClientRect().top / travel, 0, 1) : 0;
+        next.titleT = Math.round((1 - clamp((p - 0.10) / 0.20, 0, 1)) * 100) / 100;
+        next.copyT = Math.round(clamp((p - 0.26) / 0.22, 0, 1) * 100) / 100;
+      }
+      const s = this.state;
+      const same = Object.keys(next).every(k => s[k] === next[k]);
+      if (!same) this.setState(next);
+    };
 
+    this.onScroll = () => {
+      if (this.raf) return;
+      this.raf = requestAnimationFrame(() => {
+        this.raf = null;
+        this.measure();
+      });
     };
     this.onMapMsg = e => {
       const d = e.data;
@@ -370,11 +383,18 @@ class Component extends DCLogic {
       const t = document.getElementById('property');
       if (t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' });
     };
-    this.onResize = () => this.setState({ w: window.innerWidth });
+    this.onResize = () => {
+      clearTimeout(this.resizeTimer);
+      this.resizeTimer = setTimeout(() => {
+        const w = window.innerWidth;
+        const bucket = (v) => (v < 760 ? 0 : v < 1080 ? 1 : 2);
+        if (bucket(w) !== bucket(this.state.w)) this.setState({ w });
+      }, 150);
+    };
     window.addEventListener('resize', this.onResize);
     window.addEventListener('message', this.onMapMsg);
     window.addEventListener('scroll', this.onScroll, { passive: true });
-    this.onScroll();
+    this.measure();
 
     this.heroTimer = setInterval(() => {
       this.setState(s => ({ heroIndex: (s.heroIndex + 1) % 4 }));
@@ -382,6 +402,8 @@ class Component extends DCLogic {
   }
   componentWillUnmount() {
     window.removeEventListener('scroll', this.onScroll);
+    if (this.raf) cancelAnimationFrame(this.raf);
+    clearTimeout(this.resizeTimer);
     window.removeEventListener('message', this.onMapMsg);
     window.removeEventListener('resize', this.onResize);
     clearInterval(this.heroTimer);
@@ -412,9 +434,18 @@ class Component extends DCLogic {
     const yearGridStyle = `${sm ? 'display:grid;grid-template-columns:1fr' : `display:grid;grid-template-columns:repeat(${md ? 2 : 4},1fr)`};gap:4px;margin-top:40px`;
     const metaRightStyle = sm ? 'display:none' : '';
 
-    const layer = 'grid-area:1/1;align-self:center;justify-self:start;text-align:left';
-    const heroTitleStyle = `${layer};font-family:var(--font-jp);font-weight:600;line-height:1.5;letter-spacing:.03em;font-size:clamp(26px,4vw,52px);color:var(--slo-paper);max-width:22ch;margin:0;opacity:${titleT};transform:translateY(${(1 - titleT) * -8}px)`;
-    const heroCopyStyle = `${layer};display:flex;flex-direction:column;gap:clamp(14px,2.2vh,28px);max-width:none;white-space:${sm ? 'normal' : 'nowrap'};word-break:keep-all;opacity:${copyT};transform:translateY(${(1 - copyT) * 8}px);pointer-events:${copyT > 0.5 ? 'auto' : 'none'}`;
+    const layer = sm ? 'text-align:left' : 'grid-area:1/1;align-self:center;justify-self:start;text-align:left';
+    const heroOuterStyle = sm ? 'position:relative;color:var(--slo-paper)' : 'position:relative;height:260vh;color:var(--slo-paper)';
+    const heroInnerStyle = sm
+      ? 'min-height:100svh;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding-top:120px;padding-bottom:64px;position:relative'
+      : 'position:sticky;top:0;height:100svh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding-top:clamp(88px,13vh,150px);padding-bottom:clamp(64px,9vh,110px)';
+    const heroTextWrapStyle = `max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,64px);width:100%;position:relative;z-index:2;${sm ? 'display:flex;flex-direction:column;gap:28px' : 'display:grid;align-items:center;justify-items:start'}`;
+    const noteStyle = `font-size:15px;line-height:1.85;color:var(--slo-ink);margin:0;overflow-wrap:break-word;word-break:${sm ? 'normal' : 'keep-all'}`;
+    const heroScrollStyle = `position:absolute;left:clamp(16px,4vw,64px);bottom:22px;z-index:2;font-family:var(--font-sans);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,242,236,.7);display:${sm ? 'none' : 'flex'};align-items:center;gap:10px`;
+    const tT = sm ? 1 : titleT;
+    const cT = sm ? 1 : copyT;
+    const heroTitleStyle = `${layer};font-family:var(--font-jp);font-weight:600;line-height:1.5;letter-spacing:.03em;font-size:clamp(26px,4vw,52px);color:var(--slo-paper);max-width:22ch;margin:0;opacity:${tT};transform:translateY(${(1 - tT) * -8}px)`;
+    const heroCopyStyle = `${layer};display:flex;flex-direction:column;gap:clamp(14px,2.2vh,28px);max-width:none;white-space:${sm ? 'normal' : 'nowrap'};word-break:keep-all;opacity:${cT};transform:translateY(${(1 - cT) * 8}px)`;
 
     const heroSources = [
       { src: 'assets/hero-1.jpg', placeholder: 'bright harbour scene' },
@@ -429,9 +460,9 @@ class Component extends DCLogic {
       wrapStyle: `position:absolute;inset:0;z-index:0;opacity:${i === heroIndex ? 1 : 0};transition:opacity 1200ms ease-in-out`
     }));
     const onDark = overHero;
-    const textColor = onDark && !scrolled ? 'var(--slo-paper)' : 'var(--slo-ink)';
+    const textColor = !sm && onDark && !scrolled ? 'var(--slo-paper)' : 'var(--slo-ink)';
 
-    const navStyle = `position:fixed;top:33px;left:0;right:0;z-index:55;display:flex;justify-content:space-between;align-items:center;gap:${md ? '16px' : '32px'};padding:16px clamp(16px,4vw,64px);transition:background 200ms cubic-bezier(.22,.61,.36,1);${scrolled ? 'background:rgba(244,242,236,.94);border-bottom:1px solid var(--slo-rule)' : ''}`;
+    const navStyle = `position:fixed;top:33px;left:0;right:0;z-index:55;display:flex;justify-content:space-between;align-items:center;gap:${md ? '16px' : '32px'};padding:16px clamp(16px,4vw,64px);transition:background 200ms cubic-bezier(.22,.61,.36,1);${sm ? 'background:var(--slo-paper);border-bottom:1px solid var(--slo-rule)' : (scrolled ? 'background:rgba(244,242,236,.94);border-bottom:1px solid var(--slo-rule)' : '')}`;
     const brandStyle = `font-family:var(--font-logo);font-weight:700;font-size:26px;letter-spacing:-.01em;line-height:1;color:${textColor}`;
     const linkStyle = `color:${textColor};opacity:.85;transition:opacity 120ms`;
     const navItemStyle = sm ? 'display:none' : `${linkStyle};font-size:${md ? '12px' : '13px'}`;
@@ -536,7 +567,7 @@ class Component extends DCLogic {
       howFlat['how' + k + 'Order'] = it.txtOrder;
     });
 
-    return { ...howFlat, heroWrap0, heroWrap1, heroWrap2, heroWrap3, ja, en, enLogoStyle, toggleLang, langLabel, langAttr, langBtnStyle, priceRows, navStyle, brandStyle, linkStyle, navItemStyle, navLinksStyle, ctaStyle, howItems, locations, scheduleItems, heroSlides, heroTitleStyle, heroCopyStyle, conceptGridStyle, howRowStyle, locGridStyle, twoColStyle, twoColTopStyle, twoColBottomStyle, yearGridStyle, metaRightStyle };
+    return { noteStyle, heroOuterStyle, heroInnerStyle, heroTextWrapStyle, heroScrollStyle, ...howFlat, heroWrap0, heroWrap1, heroWrap2, heroWrap3, ja, en, enLogoStyle, toggleLang, langLabel, langAttr, langBtnStyle, priceRows, navStyle, brandStyle, linkStyle, navItemStyle, navLinksStyle, ctaStyle, howItems, locations, scheduleItems, heroSlides, heroTitleStyle, heroCopyStyle, conceptGridStyle, howRowStyle, locGridStyle, twoColStyle, twoColTopStyle, twoColBottomStyle, yearGridStyle, metaRightStyle };
   }
 }
 

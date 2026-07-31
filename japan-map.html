@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>slo homes / locations</title>
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="_ds/slo-design-system-9810e2cd-a7d8-4296-8968-84554453ea2b/colors_and_type.css">
+<link rel="stylesheet" href="_ds/slo-design-system-9810e2cd-a7d8-4296-8968-84554453ea2b/fonts/fonts.css">
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--slo-paper);color:var(--slo-ink);font-family:var(--font-jp)}
+  #map{width:100%;height:100%}
+  .pin-label{font-family:var(--font-logo);font-weight:700;letter-spacing:-.01em;font-size:19px;fill:var(--slo-ink)}
+  .pin-jp{font-size:11px;letter-spacing:.14em;fill:rgba(17,17,17,.6)}
+  g.pin{cursor:pointer}
+  g.pin circle.dot,g.pin circle.ring{transition:opacity 200ms ease-out,r 200ms ease-out}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+const PLACES = [
+  { en: 'Hakodate', jp: '函館', lon: 140.729, lat: 41.768, dx: 16, dy: -6, anchor: 'start' },
+  { en: 'Miyota',   jp: '御代田', lon: 138.505, lat: 36.320, dx: 16, dy: -4, anchor: 'start' },
+  { en: 'Setoda',   jp: '瀬戸田', lon: 133.083, lat: 34.305, dx: -16, dy: 8, anchor: 'end' }
+];
+
+const el = document.getElementById('map');
+const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', '100%');
+let land, W = 0, H = 0;
+
+const pick = topo => {
+  const countries = topojson.feature(topo, topo.objects.countries);
+  const jp = countries.features.filter(f => f.properties.name === 'Japan');
+  // split into individual polygons and drop the Ryukyu / Okinawa chain (south of ~30.5N)
+  const polys = [];
+  jp.forEach(f => {
+    const gs = f.geometry.type === 'MultiPolygon'
+      ? f.geometry.coordinates.map(c => ({ type: 'Polygon', coordinates: c }))
+      : [f.geometry];
+    gs.forEach(g => {
+      const lats = g.coordinates[0].map(c => c[1]);
+      if (Math.max(...lats) > 30.6) polys.push({ type: 'Feature', geometry: g, properties: {} });
+    });
+  });
+  return { type: 'FeatureCollection', features: polys };
+};
+
+d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json')
+  .then(topo => { land = pick(topo); draw(); })
+  .catch(() => d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json')
+    .then(topo => { land = pick(topo); draw(); }));
+
+function draw() {
+  if (!land) return;
+  const r = el.getBoundingClientRect();
+  W = r.width; H = r.height;
+  svg.selectAll('*').remove();
+
+  const proj = d3.geoMercator().fitExtent([[W * 0.06, H * 0.06], [W * 0.94, H * 0.94]], land);
+  const path = d3.geoPath(proj);
+
+  svg.append('g').selectAll('path').data(land.features).join('path')
+    .attr('d', path)
+    .attr('fill', 'rgba(17,17,17,.07)')
+    .attr('stroke', 'rgba(17,17,17,.32)')
+    .attr('stroke-width', 0.8)
+    .attr('stroke-linejoin', 'round')
+    .attr('vector-effect', 'non-scaling-stroke');
+
+  const g = svg.append('g');
+  PLACES.forEach(p => {
+    const [x, y] = proj([p.lon, p.lat]);
+    const pin = g.append('g').attr('class', 'pin').attr('transform', `translate(${x},${y})`);
+    pin.append('circle').attr('class', 'ring').attr('r', 16).attr('fill', 'none')
+      .attr('stroke', 'var(--slo-yellow)').attr('stroke-width', 1).attr('opacity', 0);
+    pin.append('circle').attr('class', 'dot').attr('r', 5)
+      .attr('fill', 'var(--slo-yellow)').attr('stroke', 'var(--slo-ink)').attr('stroke-width', 1);
+    const t = pin.append('g').attr('transform', `translate(${p.dx},${p.dy})`);
+    t.append('text').attr('class', 'pin-label').attr('text-anchor', p.anchor).text(p.en);
+    t.append('text').attr('class', 'pin-jp').attr('text-anchor', p.anchor).attr('y', 16).text(p.jp);
+
+    pin.on('mouseenter', () => {
+      pin.select('.ring').attr('opacity', 1).attr('r', 22);
+      pin.select('.dot').attr('r', 7);
+      parent.postMessage({ type: 'slo-map-hover', en: p.en }, '*');
+    }).on('mouseleave', () => {
+      pin.select('.ring').attr('opacity', 0).attr('r', 16);
+      pin.select('.dot').attr('r', 5);
+      parent.postMessage({ type: 'slo-map-hover', en: null }, '*');
+    }).on('click', () => parent.postMessage({ type: 'slo-map-click', en: p.en }, '*'));
+  });
+}
+
+addEventListener('resize', () => draw());
+</script>
+</body>
+</html>
